@@ -1,6 +1,6 @@
 # Pipecat MCP Server
 
-Pipecat MCP Server gives your AI assistant a voice using [Pipecat](https://github.com/pipecat-ai/pipecat). It should work with any [MCP](https://modelcontextprotocol.io/)-compatible client, exposing four simple tools:
+Pipecat MCP Server gives your AI agents a voice using [Pipecat](https://github.com/pipecat-ai/pipecat). It should work with any [MCP](https://modelcontextprotocol.io/)-compatible client, exposing four simple tools:
 
 - **start()** / **stop()**: Start and stop the voice agent
 - **listen()**: Wait for you to speak and return the transcription
@@ -38,13 +38,32 @@ uv tool install -e /path/to/repo/pipecat-mcp-server
 
 ## Running the server
 
-In one terminal, run the server by simply typing:
+First, set your API keys as environment variables:
+
+```bash
+export DEEPGRAM_API_KEY=your-deepgram-key
+export CARTESIA_API_KEY=your-cartesia-key
+```
+
+Then start the server:
 
 ```bash
 pipecat-mcp-server
 ```
 
 This will make the Pipecat MCP Server available at `http://localhost:9090/mcp`.
+
+## Auto-approving permissions
+
+For hands-free voice conversations, you will need to auto-approve tool permissions. Otherwise, your agent will prompt for confirmation, which interrupts the conversation flow.
+
+> ⚠️ **Warning**: Enabling broad permissions is at your own risk.
+
+## Installing the Pipecat skill (recommended)
+
+The [Pipecat skill](.claude/skills/pipecat/SKILL.md) provides a better voice conversation experience. It asks for verbal confirmation before making changes to files, adding a layer of safety when using broad permissions.
+
+> ⚠️ **Warning**: Without the skill, if permissions are auto-approved, your agent won't ask for verbal confirmation before modifying your files.
 
 ## 💻 MCP Client: Claude Code
 
@@ -62,8 +81,6 @@ Scope options:
 - `project`: Stored in `.mcp.json` in the project directory
 
 ### Auto-approving permissions
-
-For hands-free voice conversations, you can auto-approve tool permissions. Otherwise, Claude Code will prompt for confirmation on each tool use, which interrupts the conversation flow.
 
 Create `.claude/settings.local.json` in your project directory:
 
@@ -84,21 +101,11 @@ Create `.claude/settings.local.json` in your project directory:
 
 This grants permissions for Bash commands, file operations, web fetching, and all Pipecat MCP tools without prompting.
 
-> ⚠️ **Warning**: Enabling broad permissions is at your own risk.
-
 ### Starting a voice conversation
 
-The recommended approach is to install the [Pipecat skill](.claude/skills/pipecat/SKILL.md), then run `/pipecat` in Claude Code.
+Install the Pipecat skill into `.claude/skills/pipecat/SKILL.md`, then run `/pipecat`.
 
-> ℹ️ **Note**: The skill is configured to ask for verbal confirmation before making changes to files, adding a layer of safety when using broad permissions.
-
-Alternatively, just type:
-
-```
-Let's have a voice conversation.
-```
-
-> ⚠️ **Warning**: Without the skill, if permissions are auto-approved, Claude won't ask for verbal confirmation before making changes to your files.
+Alternatively, just type something like "Let's have a voice conversation." (no verbal confirmation for file changes).
 
 ## 💻 MCP Client: Cursor
 
@@ -118,23 +125,13 @@ Register the MCP server by editing `~/.cursor/mcp.json`:
 
 ### Auto-approving permissions
 
-For hands-free voice conversations, you can auto-approve tool permissions. Otherwise, Cursor will prompt for confirmation on each tool use, which interrupts the conversation flow. For this, you need to go to the `Auto-Run` agent settings and configure it to `Run Everything`.
-
-> ⚠️ **Warning**: Enabling broad permissions is at your own risk.
+Go to the `Auto-Run` agent settings and configure it to `Run Everything`.
 
 ### Starting a voice conversation
 
-The recommended approach is to install the [Pipecat skill](.claude/skills/pipecat/SKILL.md) (Cursor supports Claude skills), then run `/pipecat` in Cursor.
+Install the Pipecat skill into `.claude/skills/pipecat/SKILL.md` (Cursor supports Claude skills location), then run `/pipecat`.
 
-> ℹ️ **Note**: The skill is configured to ask for verbal confirmation before making changes to files, adding a layer of safety when using broad permissions.
-
-Alternatively, just create an agent and type:
-
-```
-Let's have a voice conversation.
-```
-
-> ⚠️ **Warning**: Without the skill, if permissions are auto-approved, Cursor won't ask for verbal confirmation before making changes to your files.
+Alternatively, just type something like "Let's have a voice conversation." (no verbal confirmation for file changes).
 
 ## 💻 MCP Client: OpenAI Codex
 
@@ -148,30 +145,18 @@ codex mcp add pipecat --url http://localhost:9090/mcp
 
 ### Auto-approving permissions
 
-For hands-free voice conversations, you can auto-approve tool permissions. Otherwise, Cursor will prompt for confirmation on each tool use, which interrupts the conversation flow.
-
-If you start `codex` inside a version controlled project, you will be asked if you allow `Codex` to work on the folder without approvar, just say `Yes`, which adds the following to `~/.codex/config.toml`
+If you start `codex` inside a version controlled project, you will be asked if you allow Codex to work on the folder without approval. Say `Yes`, which adds the following to `~/.codex/config.toml`.
 
 ```toml
 [projects."/path/to/your/project"]
 trust_level = "trusted"
 ```
 
-> ⚠️ **Warning**: Enabling broad permissions is at your own risk.
-
 ### Starting a voice conversation
 
-The recommended approach is to install the [Pipecat skill](.claude/skills/pipecat/SKILL.md) (Cursor supports Claude skills), then run `/pipecat` in Cursor.
+Install the Pipecat skill into `.codex/skills/pipecat/SKILL.md`, then run `$pipecat`.
 
-> ℹ️ **Note**: The skill is configured to ask for verbal confirmation before making changes to files, adding a layer of safety when using broad permissions.
-
-Alternatively, just create an agent and type:
-
-```
-Let's have a voice conversation.
-```
-
-> ⚠️ **Warning**: Without the skill, if permissions are auto-approved, Cursor won't ask for verbal confirmation before making changes to your files.
+Alternatively, just type something like "Let's have a voice conversation." (no verbal confirmation for file changes).
 
 ## 🗣️ Connecting to the voice agent
 
@@ -195,15 +180,13 @@ To use Daily's WebRTC infrastructure, first install the server with the Daily de
 uv tool install pipecat-ai-mcp-server[daily]
 ```
 
-Then pass the `-d` argument to `pipecat-mcp-server` and set the `DAILY_API_KEY` environment variable to your Daily API key and `DAILY_SAMPLE_ROOM_URL` to your desired Daily room URL.
+Then, set the `DAILY_API_KEY` environment variable to your Daily API key and `DAILY_SAMPLE_ROOM_URL` to your desired Daily room URL and pass the `-d` argument to `pipecat-mcp-server`.
 
 ```bash
-claude mcp add pipecat --scope user \
-  -e DAILY_API_KEY=your-daily-api-key \
-  -e DAILY_SAMPLE_ROOM_URL=your-daily-room \
-  -e DEEPGRAM_API_KEY=your-deepgram-key \
-  -e CARTESIA_API_KEY=your-cartesia-key \
-  -- pipecat-mcp-server -d
+export DAILY_API_KEY=your-daily-api-key
+export DAILY_SAMPLE_ROOM_URL=your-daily-room
+
+pipecat-mcp-server -d
 ```
 
 Connect by opening your Daily room URL (e.g., **https://yourdomain.daily.co/room**) in your browser. Daily Prebuilt provides a ready-to-use video/audio interface.
@@ -218,7 +201,7 @@ First, start your ngrok tunnel:
 ngrok http --url=your-proxy.ngrok.app 7860
 ```
 
-Then register the MCP server with your ngrok URL and the required environment variables for your chosen provider.
+Then, run the Pipecat MCP server with your ngrok URL and the required environment variables for your chosen telephony provider.
 
 | Provider | Environment Variables                     |
 |----------|-------------------------------------------|
@@ -230,19 +213,17 @@ Then register the MCP server with your ngrok URL and the required environment va
 #### Twilio
 
 ```bash
-claude mcp add pipecat --scope user \
-  -e DEEPGRAM_API_KEY=your-deepgram-key \
-  -e CARTESIA_API_KEY=your-cartesia-key \
-  -e TWILIO_ACCOUNT_SID=your-twilio-account-sid \
-  -e TWILIO_AUTH_TOKEN=your-twilio-auth-token \
-  -- pipecat-mcp-server -t twilio -x your-proxy.ngrok.app
+export TWILIO_ACCOUNT_SID=your-twilio-account-sid
+export TWILIO_AUTH_TOKEN=your-twilio-auth-token
+
+pipecat-mcp-server -t twilio -x your-proxy.ngrok.app
 ```
 
 Configure your provider's phone number to point to your ngrok tunnel, then call your number to connect.
 
 ## 🧩 MCP Tools
 
-### start()
+### start() -> bool
 
 Initialize and start the voice agent. Call this before using `listen()` or `speak()`.
 
@@ -255,7 +236,7 @@ Wait for user speech and return the transcribed text.
 
 **Returns:** Transcribed text from the user's speech.
 
-### speak(text: str)
+### speak(text: str) -> bool
 
 Speak text to the user using text-to-speech.
 
@@ -265,7 +246,7 @@ Speak text to the user using text-to-speech.
 **Parameters:**
 - `text` - The text to speak to the user
 
-### stop()
+### stop() -> bool
 
 Gracefully stop the voice pipeline and clean up resources.
 
