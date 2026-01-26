@@ -16,6 +16,8 @@ import multiprocessing
 import queue as queue_module
 from typing import Optional
 
+from loguru import logger
+
 # Use spawn to avoid issues with forking from async context Fork copies the
 # parent's state (event loop, file descriptors, locks) which can cause
 # issues. Spawn creates a fresh Python interpreter.
@@ -172,6 +174,27 @@ def _get_with_timeout(queue: multiprocessing.Queue, timeout: float = 0.5):
         raise TimeoutError("Queue get timed out")
 
 
+def _check_process_alive():
+    """Check if the pipecat process is still alive."""
+    if _pipecat_process and not _pipecat_process.is_alive():
+        raise RuntimeError("Voice agent process has stopped")
+
+
+async def _wait_for_command_response(timeout: float = 0.5) -> dict:
+    """Wait for response from child process with health checks."""
+    if _response_queue is None:
+        raise RuntimeError("Pipecat process not started")
+
+    loop = asyncio.get_event_loop()
+
+    while True:
+        try:
+            return await loop.run_in_executor(None, _get_with_timeout, _response_queue, timeout)
+        except TimeoutError:
+            _check_process_alive()
+            await asyncio.sleep(0)  # Yield to allow cancellation
+
+
 async def send_command(cmd: str, **kwargs) -> dict:
     """Send a command to the Pipecat child process and wait for response.
 
@@ -182,29 +205,25 @@ async def send_command(cmd: str, **kwargs) -> dict:
     Returns:
         Response dictionary from the child process.
 
-    Raises:
-        RuntimeError: If the Pipecat process has not been started or if
-            the child process returns an error.
-
     """
     if _cmd_queue is None or _response_queue is None:
         raise RuntimeError("Pipecat process not started")
 
     request = {"cmd": cmd, **kwargs}
 
-    # Use thread pool for blocking queue operations
+    # Send request to child process
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(None, _cmd_queue.put, request)
 
-    # Use timeout and retry to allow cancellation
-    while True:
-        try:
-            response = await loop.run_in_executor(None, _get_with_timeout, _response_queue, 0.5)
-            break
-        except TimeoutError:
-            # Yield to event loop to check for cancellation
-            await asyncio.sleep(0)
+    # Wait for response with cancellation support
+    try:
+        response = await _wait_for_command_response()
+    except asyncio.CancelledError:
+        logger.info(f"Command '{cmd}' was cancelled")
+        raise RuntimeError(f"Command '{cmd}' was cancelled")
 
+    # Check for errors in response
     if "error" in response:
         raise RuntimeError(response["error"])
+
     return response
