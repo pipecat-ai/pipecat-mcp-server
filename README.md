@@ -255,37 +255,6 @@ pipecat-mcp-server
 - The capture region updates dynamically if the target window is moved.
 - If the specified window is not found, capture falls back to the full screen.
 
-## 🧩 MCP Tools
-
-### start() -> bool
-
-Initialize and start the voice agent. Call this before using `listen()` or `speak()`.
-
-### listen() -> str
-
-Wait for user speech and return the transcribed text.
-
-- Blocks until the user completes an utterance (detected via voice activity detection)
-- Automatically starts the agent if not already running
-
-**Returns:** Transcribed text from the user's speech.
-
-### speak(text: str) -> bool
-
-Speak text to the user using text-to-speech.
-
-- Queues the text for synthesis and playback
-- Automatically starts the agent if not already running
-
-**Parameters:**
-- `text` - The text to speak to the user
-
-### stop() -> bool
-
-Gracefully stop the voice pipeline and clean up resources.
-
-Call this when the conversation is complete to properly shut down the audio processing pipeline.
-
 ## 📚 What's Next?
 
 - **Customize services**: Edit `agent.py` to use different STT/TTS providers (ElevenLabs, OpenAI, etc.)
