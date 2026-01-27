@@ -170,9 +170,13 @@ class PipecatMCPAgent:
         @self._transport.event_handler("on_client_disconnected")
         async def on_disconnected(transport, client):
             logger.info(f"Client disconnected")
-            # Wake up any pending listen() with disconnect signal
-            await self._user_speech_queue.put(self._DISCONNECT_SENTINEL)
-            if not isinstance(self._runner_args, DailyRunnerArguments) and self._pipeline_task:
+            if not self._pipeline_task:
+                return
+
+            if isinstance(self._runner_args, DailyRunnerArguments):
+                await self._user_speech_queue.put("I just disconnected, but I might come back.")
+            else:
+                await self._user_speech_queue.put(self._DISCONNECT_SENTINEL)
                 await self._pipeline_task.cancel()
 
         @user_aggregator.event_handler("on_user_turn_stopped")
