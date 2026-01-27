@@ -12,8 +12,9 @@ Start a voice conversation with the user using the Pipecat MCP server's start(),
 3. Enter a conversation loop:
    - Use `listen()` to hear what the user says
    - Respond naturally using `speak()`
-   - Continue until the user explicitly ends the conversation with phrases like "goodbye", "bye", "end conversation", "stop", "quit", or "I'm done"
-   - IMPORTANT: Phrases like "no thanks", "nothing right now", "that's all for now", or "I don't have anything" are NOT conversation-ending. These are responses to questions and should prompt you to continue listening or ask if there's anything else you can help with
+   - **DEFAULT BEHAVIOR: Keep the conversation going.** If the user says "no", "nothing", "that's it", "I'm good", "not right now", or similar responses to your questions, continue listening. They're just saying they don't need help at this moment, NOT that they want to end the call.
+   - **ONLY end the conversation** when the user uses explicit ending phrases: "goodbye", "bye", "end the conversation", "disconnect", or "hang up"
+   - When in doubt, keep listening. It's better to stay connected than to disconnect prematurely.
 4. When ending, say goodbye using `speak()`, then call `stop()` to gracefully shut down the voice agent
 
 ## Guidelines
