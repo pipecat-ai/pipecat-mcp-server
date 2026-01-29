@@ -7,10 +7,11 @@ Start a voice conversation using the Pipecat MCP server's start(), listen(), spe
 
 ## Flow
 
-1. Call `start()` to initialize the voice agent
-2. Greet the user with `speak()`, then loop: `listen()` → `speak()`
-3. If the user wants to end the conversation, ask for verbal confirmation before stopping. When in doubt, keep listening.
-4. Once confirmed, say goodbye with `speak()`, then call `stop()`
+1. Print a message in the terminal telling the user that the voice session is starting and it might take a moment to initialize.
+2. Call `start()` to initialize the voice agent
+3. Greet the user with `speak()`, then loop: `listen()` → `speak()`
+4. If the user wants to end the conversation, ask for verbal confirmation before stopping. When in doubt, keep listening.
+5. Once confirmed, say goodbye with `speak()`, then call `stop()`
 
 ## Guidelines
 
