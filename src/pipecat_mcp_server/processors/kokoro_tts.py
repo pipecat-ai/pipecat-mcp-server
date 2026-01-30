@@ -34,6 +34,7 @@ def language_to_kokoro_language(language: Language) -> str:
 
     Returns:
         The corresponding Kokoro language code, or None if not supported.
+
     """
     LANGUAGE_MAP = {
         Language.EN: "a",
@@ -61,8 +62,10 @@ class KokoroTTSService(TTSService):
     class InputParams(BaseModel):
         """Input parameters for Kokoro TTS configuration.
 
-        Parameters:
+        Parameters
+        ----------
             language: Language to use for synthesis.
+
         """
 
         language: Language = Language.EN
@@ -83,6 +86,7 @@ class KokoroTTSService(TTSService):
                 Defaults to "hexgrad/Kokoro-82M".
             params: Configuration parameters for synthesis.
             **kwargs: Additional arguments passed to parent `TTSService`.
+
         """
         super().__init__(**kwargs)
 
@@ -107,6 +111,7 @@ class KokoroTTSService(TTSService):
 
         Args:
             text: The text to synthesize.
+
         """
         logger.debug(f"{self}: Generating TTS [{text}]")
 
