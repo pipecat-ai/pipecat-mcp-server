@@ -46,7 +46,7 @@ from pipecat.runner.types import (
 from pipecat.runner.utils import create_transport
 from pipecat.services.stt_service import STTService
 from pipecat.services.tts_service import TTSService
-from pipecat.services.whisper.stt import MLXModel, Model, WhisperSTTService, WhisperSTTServiceMLX
+from pipecat.services.whisper.stt import WhisperSTTService, WhisperSTTServiceMLX
 from pipecat.transports.base_transport import BaseTransport, TransportParams
 from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams
 from pipecat.turns.user_stop.turn_analyzer_user_turn_stop_strategy import (
@@ -257,9 +257,9 @@ class PipecatMCPAgent:
 
     def _create_stt_service(self) -> STTService:
         if sys.platform == "darwin":
-            return WhisperSTTServiceMLX(model=MLXModel.LARGE_V3)
+            return WhisperSTTServiceMLX(model="mlx-community/whisper-large-v3-turbo")
         else:
-            return WhisperSTTService(model=Model.LARGE)
+            return WhisperSTTService(model="Systran/faster-distil-whisper-large-v3")
 
     def _create_tts_service(self) -> TTSService:
         return KokoroTTSService(voice_id="af_heart")
