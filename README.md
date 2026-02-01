@@ -193,11 +193,11 @@ First, install the server with the Daily dependency:
 uv tool install pipecat-ai-mcp-server[daily]
 ```
 
-Then, set the `DAILY_API_KEY` environment variable to your Daily API key and `DAILY_SAMPLE_ROOM_URL` to your desired Daily room URL and pass the `-d` argument to `pipecat-mcp-server`.
+Then, set the `DAILY_API_KEY` environment variable to your Daily API key and `DAILY_ROOM_URL` to your desired Daily room URL and pass the `-d` argument to `pipecat-mcp-server`.
 
 ```bash
 export DAILY_API_KEY=your-daily-api-key
-export DAILY_SAMPLE_ROOM_URL=your-daily-room
+export DAILY_ROOM_URL=your-daily-room
 
 pipecat-mcp-server -d
 ```
