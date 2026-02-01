@@ -44,6 +44,7 @@ screen = [
     "pyobjc-framework-ScreenCaptureKit>=11.0; sys_platform == 'darwin'",
     "pyobjc-framework-Quartz>=11.0; sys_platform == 'darwin'",
     "pyobjc-framework-CoreMedia>=11.0; sys_platform == 'darwin'",
+    "python-xlib>=0.33; sys_platform == 'linux'",
 ]
 
 [dependency-groups]
