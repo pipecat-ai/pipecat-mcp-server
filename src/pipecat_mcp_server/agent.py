@@ -36,7 +36,6 @@ from pipecat.processors.aggregators.llm_response_universal import (
     LLMUserAggregatorParams,
     UserTurnStoppedMessage,
 )
-from pipecat.processors.frameworks.rtvi import RTVIObserver, RTVIProcessor
 from pipecat.runner.types import (
     DailyRunnerArguments,
     RunnerArguments,
@@ -125,15 +124,12 @@ class PipecatMCPAgent:
             ),
         )
 
-        rtvi = RTVIProcessor()
-
         screen_capture = ScreenCaptureProcessor()
 
         # Create pipeline
         pipeline = Pipeline(
             [
                 self._transport.input(),
-                rtvi,
                 screen_capture,
                 stt,
                 user_aggregator,
@@ -148,7 +144,6 @@ class PipecatMCPAgent:
         self._pipeline_task = PipelineTask(
             pipeline,
             cancel_on_idle_timeout=False,
-            observers=[RTVIObserver(rtvi)],
         )
 
         self._pipeline_runner = PipelineRunner(handle_sigterm=True)
@@ -156,7 +151,6 @@ class PipecatMCPAgent:
         @self._transport.event_handler("on_client_connected")
         async def on_connected(transport, client):
             logger.info(f"Client connected")
-            await rtvi.set_bot_ready()
 
         @self._transport.event_handler("on_client_disconnected")
         async def on_disconnected(transport, client):
