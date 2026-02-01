@@ -40,7 +40,11 @@ Changelog = "https://github.com/pipecat-ai/pipecat-mcp-server/blob/main/CHANGELO
 
 [project.optional-dependencies]
 daily = [ "daily-python~=0.23.0" ]
-screen = [ "mss>=10.0.0", "pywinctl>=0.4" ]
+screen = [
+    "pyobjc-framework-ScreenCaptureKit>=11.0; sys_platform == 'darwin'",
+    "pyobjc-framework-Quartz>=11.0; sys_platform == 'darwin'",
+    "pyobjc-framework-CoreMedia>=11.0; sys_platform == 'darwin'",
+]
 
 [dependency-groups]
 dev = [
