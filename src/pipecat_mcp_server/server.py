@@ -87,6 +87,7 @@ async def screen_capture(window_id: int | None = None) -> int | None:
 
     Returns the window ID if the window was found, or None if it was not found
     or capturing full screen.
+
     """
     result = await send_command("screen_capture", window_id=window_id)
     return result.get("window_id")

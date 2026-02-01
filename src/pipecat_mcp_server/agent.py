@@ -258,7 +258,9 @@ class PipecatMCPAgent:
 
         """
         windows = await self._screen_capture._backend.list_windows()
-        return [{"title": w.title, "app_name": w.app_name, "window_id": w.window_id} for w in windows]
+        return [
+            {"title": w.title, "app_name": w.app_name, "window_id": w.window_id} for w in windows
+        ]
 
     async def screen_capture(self, window_id: Optional[int] = None) -> Optional[int]:
         """Switch screen capture to a different window or full screen.
