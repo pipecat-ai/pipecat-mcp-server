@@ -27,6 +27,7 @@ from pipecat.frames.frames import (
     LLMFullResponseStartFrame,
     LLMTextFrame,
 )
+from pipecat.pipeline.parallel_pipeline import ParallelPipeline
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineTask
@@ -55,6 +56,7 @@ from pipecat.turns.user_turn_strategies import UserTurnStrategies
 
 from pipecat_mcp_server.processors.kokoro_tts import KokoroTTSService
 from pipecat_mcp_server.processors.screen_capture import ScreenCaptureProcessor
+from pipecat_mcp_server.processors.vision import VisionProcessor
 
 load_dotenv(override=True)
 
@@ -126,15 +128,19 @@ class PipecatMCPAgent:
         )
 
         self._screen_capture = ScreenCaptureProcessor()
+        self._vision = VisionProcessor()
 
-        # Create pipeline
+        # Create pipeline with parallel branches:
+        # - Main branch: audio processing (STT → aggregator → TTS)
+        # - Vision branch: saves frames to disk on demand
         pipeline = Pipeline(
             [
                 self._transport.input(),
                 self._screen_capture,
-                stt,
-                user_aggregator,
-                tts,
+                ParallelPipeline(
+                    [stt, user_aggregator, tts],
+                    [self._vision],
+                ),
                 # Assistant aggregator before the transport, because we want to
                 # keep everyting from the client.
                 assistant_aggregator,
@@ -273,6 +279,19 @@ class PipecatMCPAgent:
 
         """
         return await self._screen_capture.screen_capture(window_id)
+
+    async def capture_screenshot(self) -> str:
+        """Capture a screenshot from the current screen capture stream.
+
+        Saves the next frame to a temporary PNG file. Screen capture
+        must already be started via screen_capture().
+
+        Returns:
+            The absolute path to the saved image file.
+
+        """
+        self._vision.request_capture()
+        return await self._vision.get_result()
 
     def _create_stt_service(self) -> STTService:
         if sys.platform == "darwin":

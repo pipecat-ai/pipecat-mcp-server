@@ -94,6 +94,19 @@ async def screen_capture(window_id: int | None = None) -> int | None:
 
 
 @mcp.tool()
+async def capture_screenshot() -> str:
+    """Take a look at what's on screen.
+
+    Use this when the user asks what you can see. Screen capture must
+    already be started via screen_capture().
+
+    Returns the absolute path to the saved image file.
+    """
+    result = await send_command("capture_screenshot")
+    return result.get("path", "No screen capture available.")
+
+
+@mcp.tool()
 async def stop() -> bool:
     """Stop the voice pipeline and clean up resources.
 
