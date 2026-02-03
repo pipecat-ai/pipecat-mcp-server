@@ -5,6 +5,14 @@ All notable changes to **Pipecat MCP Server** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.11] - 2026-02-02
+
+### Added
+
+- New `capture_screenshot()` MCP tool that captures the current screen frame and
+  returns an image path. This allows the agent to visually analyze what's on
+  screen and help with debugging, UI feedback, and more.
+
 ## [0.0.10] - 2026-02-01
 
 ### Added

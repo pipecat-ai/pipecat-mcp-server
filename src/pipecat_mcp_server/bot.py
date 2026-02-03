@@ -64,6 +64,10 @@ async def bot(runner_args: RunnerArguments):
                 matched_id = await agent.screen_capture(request.get("window_id"))
                 await send_response({"ok": True, "window_id": matched_id})
                 logger.debug(f"Command '{cmd}' finished")
+            elif cmd == "capture_screenshot":
+                path = await agent.capture_screenshot()
+                await send_response({"path": path})
+                logger.debug(f"Command '{cmd}' finished")
             elif cmd == "stop":
                 await agent.stop()
                 await send_response({"ok": True})

@@ -72,11 +72,14 @@ The [Pipecat skill](.claude/skills/pipecat/SKILL.md) provides a better voice con
 
 Alternatively, just tell your agent something like `Let's have a voice conversation`. In this case, the agent won't ask for verbal confirmation before making changes.
 
-## 🖥️ Screen Capture
+## 🖥️ Screen Capture & Analysis
 
-Screen capture is built-in and lets you stream your screen (or a specific window) to your configured transport (e.g. Pipecat Playground or Daily room).
+Screen capture lets you stream your screen (or a specific window) to your configured transport, and ask the agent to help with what it sees.
 
-For example, say *"tell me the available windows"* or *"capture my Cursor window"*.
+For example:
+- *"capture my browser window"* — starts streaming that window
+- *"what's causing this error?"* — the agent analyzes the screen and helps debug
+- *"how does this UI look?"* — get feedback on your design
 
 **Supported platforms:**
 
