@@ -94,6 +94,24 @@ async def screen_capture(window_id: int | None = None) -> int | None:
 
 
 @mcp.tool()
+async def describe_screen(query: str) -> str:
+    """Describe what's on screen using vision analysis.
+
+    Uses the Moondream vision model to analyze the current screen capture
+    based on the provided query. Screen capture must already be started
+    via screen_capture().
+
+    Args:
+        query: The question or prompt about what's on screen, e.g.,
+            "What do you see?" or "Describe the code in this editor."
+
+    Returns the vision model's description of what it sees.
+    """
+    result = await send_command("describe_screen", query=query)
+    return result.get("description", "No description available.")
+
+
+@mcp.tool()
 async def stop() -> bool:
     """Stop the voice pipeline and clean up resources.
 

@@ -24,7 +24,7 @@ dependencies = [
     "loguru>=0.7.0,<1",
     "mcp>=1.0.0",
     "pip>=25.3",
-    "pipecat-ai[cartesia,deepgram,local-smart-turn-v3,rnnoise,runner,silero,webrtc,websocket]>=0.0.101",
+    "pipecat-ai[cartesia,deepgram,local-smart-turn-v3,moondream,rnnoise,runner,silero,webrtc,websocket]>=0.0.101",
     "pipecat-ai[mlx-whisper]>=0.0.100; sys_platform == 'darwin'",
     "pipecat-ai[whisper]>=0.0.100; sys_platform != 'darwin'",
     "pyobjc-framework-CoreMedia>=11.0; sys_platform == 'darwin'",

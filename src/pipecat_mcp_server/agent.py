@@ -27,6 +27,7 @@ from pipecat.frames.frames import (
     LLMFullResponseStartFrame,
     LLMTextFrame,
 )
+from pipecat.pipeline.parallel_pipeline import ParallelPipeline
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineTask
@@ -55,6 +56,7 @@ from pipecat.turns.user_turn_strategies import UserTurnStrategies
 
 from pipecat_mcp_server.processors.kokoro_tts import KokoroTTSService
 from pipecat_mcp_server.processors.screen_capture import ScreenCaptureProcessor
+from pipecat_mcp_server.processors.vision import ImageFrameConverter, VisionProcessor
 
 load_dotenv(override=True)
 
@@ -126,15 +128,20 @@ class PipecatMCPAgent:
         )
 
         self._screen_capture = ScreenCaptureProcessor()
+        self._vision = VisionProcessor()
+        self._vision_converter = ImageFrameConverter(self._vision)
 
-        # Create pipeline
+        # Create pipeline with parallel branches:
+        # - Main branch: audio processing (STT → aggregator → TTS)
+        # - Vision branch: frame converter + vision analysis
         pipeline = Pipeline(
             [
                 self._transport.input(),
                 self._screen_capture,
-                stt,
-                user_aggregator,
-                tts,
+                ParallelPipeline(
+                    [stt, user_aggregator, tts],
+                    [self._vision_converter, self._vision],
+                ),
                 # Assistant aggregator before the transport, because we want to
                 # keep everyting from the client.
                 assistant_aggregator,
@@ -273,6 +280,26 @@ class PipecatMCPAgent:
 
         """
         return await self._screen_capture.screen_capture(window_id)
+
+    async def describe_screen(self, query: str) -> str:
+        """Describe what's on screen using Moondream vision.
+
+        Uses the Moondream vision service to analyze the current screen
+        capture based on the query. Screen capture must already be started
+        via screen_capture().
+
+        Args:
+            query: The question or prompt about what's on screen.
+
+        Returns:
+            A text description from the vision service.
+
+        """
+        # Request description of the next frame
+        self._vision.request_description(query)
+
+        # Wait for the result from the pipeline
+        return await self._vision.get_result()
 
     def _create_stt_service(self) -> STTService:
         if sys.platform == "darwin":
