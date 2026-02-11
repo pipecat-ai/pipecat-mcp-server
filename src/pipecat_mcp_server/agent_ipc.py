@@ -38,15 +38,26 @@ def _cleanup():
         if _pipecat_process.is_alive():
             logger.debug(f"Terminating Pipecat MCP Agent process (PID {_pipecat_process.ident})")
             _pipecat_process.terminate()
-            _pipecat_process.join(timeout=1.0)
+            _pipecat_process.join(timeout=5.0)
 
         # Kill if terminate didn't work
         if _pipecat_process.is_alive():
             logger.debug(f"Killing Pipecat MCP Agent process (PID {_pipecat_process.ident})")
             _pipecat_process.kill()
-            _pipecat_process.join(timeout=1.0)
+            _pipecat_process.join(timeout=5.0)
 
         _pipecat_process = None
+
+    # Close the queues so their internal semaphores are released
+    if _cmd_queue is not None:
+        _cmd_queue.close()
+        _cmd_queue.join_thread()
+        _cmd_queue = None
+
+    if _response_queue is not None:
+        _response_queue.close()
+        _response_queue.join_thread()
+        _response_queue = None
 
 
 def start_pipecat_process():

@@ -5,6 +5,15 @@ All notable changes to **Pipecat MCP Server** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed an issue where multiprocessing queues were not properly closed during
+  cleanup, which could cause resource leaks.
+  
+- Increased process join timeout from 1s to 5s for more reliable shutdown.
+
 ## [0.0.11] - 2026-02-02
 
 ### Added
