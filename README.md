@@ -66,15 +66,15 @@ For hands-free voice conversations, you will need to auto-approve tool permissio
 
 > ⚠️ **Warning**: Enabling broad permissions is at your own risk.
 
-## Installing the Pipecat skill (recommended)
+## Installing the talk skill (recommended)
 
-The [Pipecat skill](skills/pipecat/SKILL.md) provides a better voice conversation experience. It asks for verbal confirmation before making changes to files, adding a layer of safety when using broad permissions.
+The [talk skill](https://github.com/pipecat-ai/skills/blob/main/skills/talk/SKILL.md) provides a better voice conversation experience. It asks for verbal confirmation before making changes to files, adding a layer of safety when using broad permissions.
 
-If you're using [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview), you can install Pipecat as a plugin:
+If you're using Claude Code, install the marketplace and plugin:
 
-```bash
-claude plugin marketplace add pipecat-ai/pipecat-mcp-server
-claude plugin install pipecat-mcp-server@pipecat
+```
+/plugin marketplace add pipecat-ai/skills
+/plugin install pipecat-mcp-server@pipecat-skills
 ```
 
 Alternatively, just tell your agent something like `Let's have a voice conversation`. In this case, the agent won't ask for verbal confirmation before making changes.
@@ -132,10 +132,10 @@ This grants permissions for bash commands, file operations, web fetching and sea
 
 ### Starting a voice conversation
 
-1. Install the Pipecat skill into `.claude/skills/pipecat/SKILL.md`
+1. Install the talk skill (see above).
 2. Start the Pipecat MCP Server.
 3. Connect to an audio transport (see **🗣️ Connecting to the voice agent** below).
-4. Run `/pipecat`.
+4. Run `/talk`.
 
 ## 💻 MCP Client: Cursor
 
@@ -159,10 +159,10 @@ Go to the `Auto-Run` agent settings and configure it to `Run Everything`.
 
 ### Starting a voice conversation
 
-1. Install the Pipecat skill into `.claude/skills/pipecat/SKILL.md` (Cursor supports the Claude skills location).
+1. Install the talk skill into `.claude/skills/talk/SKILL.md` (Cursor supports the Claude skills location).
 2. Start the Pipecat MCP Server.
 3. Connect to an audio transport (see **🗣️ Connecting to the voice agent** below).
-4. In a **new Cursor agent**, run `/pipecat`.
+4. In a **new Cursor agent**, run `/talk`.
 
 ## 💻 MCP Client: OpenAI Codex
 
@@ -185,10 +185,10 @@ trust_level = "trusted"
 
 ### Starting a voice conversation
 
-1. Install the Pipecat skill into `.codex/skills/pipecat/SKILL.md`.
+1. Install the talk skill into `.codex/skills/talk/SKILL.md`.
 2. Start the Pipecat MCP Server.
 3. Connect to an audio transport (see **🗣️ Connecting to the voice agent** below).
-4. Run `$pipecat`.
+4. Run `$talk`.
 
 ## 🗣️ Connecting to the voice agent
 
