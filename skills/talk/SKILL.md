@@ -1,5 +1,5 @@
 ---
-name: pipecat
+name: talk
 description: Start a voice conversation using the Pipecat MCP server
 ---
 

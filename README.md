@@ -68,7 +68,14 @@ For hands-free voice conversations, you will need to auto-approve tool permissio
 
 ## Installing the Pipecat skill (recommended)
 
-The [Pipecat skill](.claude/skills/pipecat/SKILL.md) provides a better voice conversation experience. It asks for verbal confirmation before making changes to files, adding a layer of safety when using broad permissions.
+The [Pipecat skill](skills/pipecat/SKILL.md) provides a better voice conversation experience. It asks for verbal confirmation before making changes to files, adding a layer of safety when using broad permissions.
+
+If you're using [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview), you can install Pipecat as a plugin:
+
+```bash
+claude plugin marketplace add pipecat-ai/pipecat-mcp-server
+claude plugin install pipecat-mcp-server@pipecat
+```
 
 Alternatively, just tell your agent something like `Let's have a voice conversation`. In this case, the agent won't ask for verbal confirmation before making changes.
 
