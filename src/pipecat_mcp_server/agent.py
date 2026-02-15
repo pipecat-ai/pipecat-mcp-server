@@ -301,7 +301,18 @@ class PipecatMCPAgent:
             if stt_service == "voxtral":
                 from pipecat_mcp_server.processors.voxtral_stt import VoxtralSTTService
 
-                return VoxtralSTTService()
+                delay_ms = int(os.environ.get("VOXTRAL_DELAY_MS", "480"))
+                logger.info(f"Using Voxtral STT with delay={delay_ms}ms")
+                return VoxtralSTTService(delay_ms=delay_ms)
+
+            if stt_service == "voxtral-streaming":
+                from pipecat_mcp_server.processors.voxtral_streaming_stt import (
+                    VoxtralStreamingSTTService,
+                )
+
+                delay_ms = int(os.environ.get("VOXTRAL_DELAY_MS", "480"))
+                logger.info(f"Using Voxtral Streaming STT with delay={delay_ms}ms")
+                return VoxtralStreamingSTTService(delay_ms=delay_ms)
 
             return WhisperSTTServiceMLX(model="mlx-community/whisper-large-v3-turbo")
         else:
