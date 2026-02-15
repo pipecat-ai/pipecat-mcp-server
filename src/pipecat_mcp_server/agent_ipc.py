@@ -114,7 +114,7 @@ def run_pipecat_process(cmd_queue: multiprocessing.Queue, response_queue: multip
     # environment variables (e.g. DAILY_API_KEY) before our bot() is called.
     from dotenv import load_dotenv
 
-    load_dotenv(override=True)
+    load_dotenv(override=False)
 
     # Change to package directory so pipecat_main() can find bot.py
     package_dir = os.path.dirname(__file__)

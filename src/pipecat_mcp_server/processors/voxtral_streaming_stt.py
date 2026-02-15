@@ -38,6 +38,7 @@ _END_UTTERANCE = object()
 _RESET = object()
 _SHUTDOWN = object()
 _EOS = object()
+_THREAD_ERROR = object()
 
 # Constants from voxmlx
 _N_LEFT_PAD_TOKENS = 32
@@ -106,6 +107,7 @@ class VoxtralStreamingSTTService(STTService):
 
         # Token accumulation (accessed from async side only)
         self._utterance_tokens: list[int] = []
+        self._partial_text: str = ""
 
         self._settings = {
             "language": language,
@@ -172,8 +174,8 @@ class VoxtralStreamingSTTService(STTService):
 
     async def run_stt(self, audio: bytes) -> AsyncGenerator[Frame, None]:
         """Not used in streaming mode; audio is processed via background thread."""
-        return
-        yield  # noqa: F841 - makes this an async generator
+        if False:
+            yield
 
     async def process_audio_frame(self, frame, direction: FrameDirection):
         """Feed audio to the background thread and drain decoded tokens."""
@@ -203,21 +205,33 @@ class VoxtralStreamingSTTService(STTService):
             self._audio_in_queue.put(_START_UTTERANCE)
         elif isinstance(frame, VADUserStoppedSpeakingFrame):
             self._audio_in_queue.put(_END_UTTERANCE)
+            await self._flush_until_eos()
         elif isinstance(frame, InterruptionFrame):
             self._utterance_tokens = []
             self._audio_in_queue.put(_RESET)
 
-    async def _drain_token_queue(self):
-        """Pull decoded tokens from the background thread and emit frames."""
+    async def _drain_token_queue(self) -> bool:
+        """Pull decoded tokens from the background thread and emit frames.
+
+        Returns:
+            True if an EOS sentinel was drained (utterance finalized), False otherwise.
+
+        """
         from mistral_common.tokens.tokenizers.base import SpecialTokenPolicy
 
+        hit_eos = False
         while True:
             try:
                 item = self._token_out_queue.get_nowait()
             except queue.Empty:
                 break
 
+            if item is _THREAD_ERROR:
+                logger.error("Voxtral streaming thread died, no further transcriptions")
+                break
+
             if item is _EOS:
+                hit_eos = True
                 # Emit final TranscriptionFrame
                 if self._utterance_tokens:
                     full_text = self._sp.decode(
@@ -235,29 +249,47 @@ class VoxtralStreamingSTTService(STTService):
                         frame.finalized = True
                         await self.push_frame(frame)
                 self._utterance_tokens = []
+                self._partial_text = ""
             elif isinstance(item, int):
-                # Token ID
+                # Token ID — decode only the new token (O(1) per token)
                 self._utterance_tokens.append(item)
+                new_text = self._sp.decode(
+                    [item], special_token_policy=SpecialTokenPolicy.IGNORE
+                )
+                self._partial_text += new_text
 
                 # Emit InterimTranscriptionFrame on word boundaries
-                partial_text = self._sp.decode(
-                    self._utterance_tokens,
-                    special_token_policy=SpecialTokenPolicy.IGNORE,
-                ).strip()
-                if partial_text:
-                    # Check if the last decoded character is whitespace (word boundary)
-                    raw = self._sp.decode(
-                        [item], special_token_policy=SpecialTokenPolicy.IGNORE
-                    )
-                    if raw and raw[-1] in (" ", "\n"):
+                if new_text and new_text[-1] in (" ", "\n"):
+                    stripped = self._partial_text.strip()
+                    if stripped:
                         await self.push_frame(
                             InterimTranscriptionFrame(
-                                text=partial_text,
+                                text=stripped,
                                 user_id=self._user_id,
                                 timestamp=time_now_iso8601(),
                                 language=self._language,
                             )
                         )
+
+        return hit_eos
+
+    async def _flush_until_eos(self, timeout: float = 2.0):
+        """Poll the token queue until EOS is drained after end-of-utterance.
+
+        Called after queuing _END_UTTERANCE so the final TranscriptionFrame is
+        emitted even when no further audio frames arrive to trigger
+        process_audio_frame().
+
+        Args:
+            timeout: Maximum seconds to wait for EOS before giving up.
+
+        """
+        deadline = asyncio.get_event_loop().time() + timeout
+        while asyncio.get_event_loop().time() < deadline:
+            if await self._drain_token_queue():
+                return
+            await asyncio.sleep(_POLL_INTERVAL_SEC)
+        logger.warning("Timed out waiting for EOS after end-of-utterance")
 
     # -- Background thread -------------------------------------------------
 
@@ -268,6 +300,14 @@ class VoxtralStreamingSTTService(STTService):
         runs incremental mel -> encode -> decode, writes tokens to
         _token_out_queue.
         """
+        try:
+            self._streaming_loop_inner()
+        except Exception:
+            logger.exception("Voxtral streaming thread crashed")
+            self._token_out_queue.put(_THREAD_ERROR)
+
+    def _streaming_loop_inner(self):
+        """Inner loop body, separated so _streaming_loop can catch exceptions."""
         import mlx.core as mx
         from voxmlx.audio import SAMPLES_PER_TOKEN, log_mel_spectrogram_step
         from voxmlx.cache import RotatingKVCache
@@ -303,12 +343,16 @@ class VoxtralStreamingSTTService(STTService):
             # Explicitly release KV caches before clearing references
             if decoder_cache is not None:
                 for cache in decoder_cache:
-                    cache.keys = None
-                    cache.values = None
+                    if hasattr(cache, "keys"):
+                        cache.keys = None
+                    if hasattr(cache, "values"):
+                        cache.values = None
             if encoder_cache is not None:
                 for cache in encoder_cache:
-                    cache.keys = None
-                    cache.values = None
+                    if hasattr(cache, "keys"):
+                        cache.keys = None
+                    if hasattr(cache, "values"):
+                        cache.values = None
 
             audio_tail = None
             conv1_tail = None

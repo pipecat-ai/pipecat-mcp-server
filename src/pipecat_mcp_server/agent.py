@@ -59,7 +59,7 @@ from pipecat_mcp_server.processors.kokoro_tts import KokoroTTSService
 from pipecat_mcp_server.processors.screen_capture import ScreenCaptureProcessor
 from pipecat_mcp_server.processors.vision import VisionProcessor
 
-load_dotenv(override=True)
+load_dotenv(override=False)
 
 
 class PipecatMCPAgent:
@@ -294,6 +294,22 @@ class PipecatMCPAgent:
         self._vision.request_capture()
         return await self._vision.get_result()
 
+    def _parse_voxtral_delay_ms(self) -> int:
+        """Parse and validate the VOXTRAL_DELAY_MS environment variable."""
+        raw = os.environ.get("VOXTRAL_DELAY_MS", "480")
+        try:
+            delay_ms = int(raw)
+        except ValueError:
+            logger.warning(f"Invalid VOXTRAL_DELAY_MS='{raw}', using default 480ms")
+            return 480
+        if delay_ms % 80 != 0:
+            rounded = (delay_ms // 80) * 80
+            logger.warning(
+                f"VOXTRAL_DELAY_MS={delay_ms} is not a multiple of 80, rounding to {rounded}ms"
+            )
+            return rounded
+        return delay_ms
+
     def _create_stt_service(self) -> STTService:
         stt_service = os.environ.get("STT_SERVICE", "").lower()
 
@@ -301,7 +317,7 @@ class PipecatMCPAgent:
             if stt_service == "voxtral":
                 from pipecat_mcp_server.processors.voxtral_stt import VoxtralSTTService
 
-                delay_ms = int(os.environ.get("VOXTRAL_DELAY_MS", "480"))
+                delay_ms = self._parse_voxtral_delay_ms()
                 logger.info(f"Using Voxtral STT with delay={delay_ms}ms")
                 return VoxtralSTTService(delay_ms=delay_ms)
 
@@ -310,7 +326,7 @@ class PipecatMCPAgent:
                     VoxtralStreamingSTTService,
                 )
 
-                delay_ms = int(os.environ.get("VOXTRAL_DELAY_MS", "480"))
+                delay_ms = self._parse_voxtral_delay_ms()
                 logger.info(f"Using Voxtral Streaming STT with delay={delay_ms}ms")
                 return VoxtralStreamingSTTService(delay_ms=delay_ms)
 

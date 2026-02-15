@@ -37,6 +37,7 @@ MANIFEST
 
 # uv
 .python-version
+uv.lock
 
 # Pipecat
 whisker_setup.py
