@@ -31,12 +31,14 @@ share/python-wheels/
 *.egg
 MANIFEST
 .env*
+!.env.example
 
 # macOS
 .DS_Store
 
 # uv
 .python-version
+uv.lock
 
 # Pipecat
 whisker_setup.py

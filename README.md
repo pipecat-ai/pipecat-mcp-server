@@ -255,6 +255,37 @@ pipecat-mcp-server -t twilio -x your-proxy.ngrok.app
 
 Configure your provider's phone number to point to your ngrok URL, then call your number to connect.
 
+## ⚙️ Configuration
+
+Copy the example environment file and edit it with your values:
+
+```bash
+cp .env.example .env
+```
+
+### Speech-to-Text
+
+| `STT_SERVICE` | Engine | Platform | Notes |
+|---|---|---|---|
+| _(unset)_ | Whisper (MLX) | macOS | Default. Local, no API key. |
+| _(unset)_ | Faster Whisper | Linux | Default. Local, no API key. |
+| `voxtral` | Voxtral Realtime | macOS | Segmented — transcribes after speech ends. |
+| `voxtral-streaming` | Voxtral Realtime | macOS | Streaming — transcribes during speech. |
+
+For Voxtral modes, you can also set:
+
+| Variable | Default | Description |
+|---|---|---|
+| `VOXTRAL_DELAY_MS` | `480` | Transcription delay in ms (must be multiple of 80). Lower = faster but less accurate. |
+
+### Text-to-Speech
+
+| Engine | Voice | Notes |
+|---|---|---|
+| Kokoro | `af_heart` | Default. Local, no API key. |
+
+See `.env.example` for all available environment variables, including transport-specific ones (Daily, Twilio, Telnyx, etc.).
+
 ## 📚 What's Next?
 
 - **Customize services**: Edit `agent.py` to use different STT/TTS providers
