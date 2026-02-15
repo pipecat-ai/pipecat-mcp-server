@@ -18,6 +18,8 @@ from pipecat.transcriptions.language import Language
 from pipecat.utils.time import time_now_iso8601
 
 DEFAULT_MODEL = "mlx-community/Voxtral-Mini-4B-Realtime-6bit"
+DEFAULT_DELAY_MS = 480
+MS_PER_TOKEN = 80
 
 
 class VoxtralSTTService(SegmentedSTTService):
@@ -32,6 +34,7 @@ class VoxtralSTTService(SegmentedSTTService):
         *,
         model: str = DEFAULT_MODEL,
         temperature: float = 0.0,
+        delay_ms: int = DEFAULT_DELAY_MS,
         language: Language = Language.EN,
         **kwargs,
     ):
@@ -40,6 +43,8 @@ class VoxtralSTTService(SegmentedSTTService):
         Args:
             model: HuggingFace model ID for the Voxtral model.
             temperature: Sampling temperature (0.0 = greedy).
+            delay_ms: Transcription delay in ms (multiple of 80). Lower is
+                faster but less accurate. 480 recommended, 160 for low latency.
             language: Default language for transcription.
             **kwargs: Additional arguments passed to SegmentedSTTService.
 
@@ -47,6 +52,7 @@ class VoxtralSTTService(SegmentedSTTService):
         super().__init__(**kwargs)
         self.set_model_name(model)
         self._temperature = temperature
+        self._num_delay_tokens = delay_ms // MS_PER_TOKEN
         self._model = None
         self._sp = None
         self._config = None
@@ -64,9 +70,12 @@ class VoxtralSTTService(SegmentedSTTService):
         """Load the Voxtral model and cache prompt tokens on first use."""
         from voxmlx import _build_prompt_tokens, load_model
 
-        logger.info(f"Loading Voxtral model: {self.model_name}...")
+        delay_ms = self._num_delay_tokens * MS_PER_TOKEN
+        logger.info(f"Loading Voxtral model: {self.model_name} (delay={delay_ms}ms)...")
         self._model, self._sp, self._config = load_model(self.model_name)
-        self._prompt_tokens, self._n_delay_tokens = _build_prompt_tokens(self._sp)
+        self._prompt_tokens, self._n_delay_tokens = _build_prompt_tokens(
+            self._sp, num_delay_tokens=self._num_delay_tokens
+        )
         logger.info("Voxtral model loaded")
 
     def _transcribe(self, audio_path: str) -> str:
