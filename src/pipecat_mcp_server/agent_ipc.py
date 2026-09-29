@@ -12,6 +12,7 @@ process runs separately to avoid stdio collisions with the MCP protocol.
 """
 
 import asyncio
+import itertools
 import multiprocessing
 import queue as queue_module
 from typing import Optional
@@ -26,6 +27,11 @@ multiprocessing.set_start_method("spawn", force=True)
 _cmd_queue: Optional[multiprocessing.Queue] = None
 _response_queue: Optional[multiprocessing.Queue] = None
 _pipecat_process: Optional[multiprocessing.Process] = None
+
+# Requests carry an id and the child echoes it in the response, so the parent
+# can discard a response that belongs to a command it stopped waiting for.
+_request_ids = itertools.count(1)
+_active_request_id: Optional[int] = None
 
 
 def _cleanup():
@@ -136,6 +142,8 @@ async def send_response(response: dict):
     """
     if _response_queue is None:
         raise RuntimeError("Pipecat process not started")
+    if _active_request_id is not None:
+        response = {**response, "id": _active_request_id}
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(None, _response_queue.put, response)
 
@@ -156,6 +164,8 @@ async def read_request() -> dict:
         raise RuntimeError("Pipecat process not started")
     loop = asyncio.get_event_loop()
     request = await loop.run_in_executor(None, _cmd_queue.get)
+    global _active_request_id
+    _active_request_id = request.get("id")
     return request
 
 
@@ -214,7 +224,8 @@ async def send_command(cmd: str, **kwargs) -> dict:
     if _cmd_queue is None or _response_queue is None:
         raise RuntimeError("Pipecat process not started")
 
-    request = {"cmd": cmd, **kwargs}
+    request_id = next(_request_ids)
+    request = {"cmd": cmd, "id": request_id, **kwargs}
 
     # Send request to child process
     loop = asyncio.get_event_loop()
@@ -222,7 +233,12 @@ async def send_command(cmd: str, **kwargs) -> dict:
 
     # Wait for response with cancellation support
     try:
-        response = await _wait_for_command_response()
+        while True:
+            response = await _wait_for_command_response()
+            if response.get("id") == request_id:
+                break
+            # A previous command was cancelled before its response arrived.
+            logger.debug(f"Discarding stale response for command id {response.get('id')}")
     except asyncio.CancelledError:
         logger.info(f"Command '{cmd}' was cancelled")
         raise

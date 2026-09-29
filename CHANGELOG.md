@@ -5,6 +5,14 @@ All notable changes to **Pipecat MCP Server** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed an issue where cancelling a `listen()` call caused the next MCP tool call
+  to return the late response of the cancelled call instead of its own. Requests
+  and responses now carry an id, and stale responses are discarded.
+
 ## [0.0.12] - 2026-02-10
 
 ### Fixed
